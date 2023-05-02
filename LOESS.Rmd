@@ -1,0 +1,87 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+traindata <- read.table(file = "./7406train.csv", sep=",");
+```
+
+
+```{r}
+df = cbind(traindata[c(1:2)], rowMeans(traindata[-c(1:2)]))
+colnames(df) = c('x1', 'x2', 'Y')
+```
+
+```{r}
+#make this example reproducible
+set.seed(1)
+
+#use 70% of dataset as training set and 30% as test set
+sample <- sample(c(TRUE, FALSE), nrow(df), replace=TRUE, prob=c(0.8,0.2))
+train  <- df[sample, ]
+test   <- df[!sample, ]
+```
+
+```{r}
+library(caret)
+
+ctrl <- trainControl(method = "cv", number = 5)
+grid <- expand.grid(span = seq(0.05, 0.15, len = 50), degree = 1)
+
+model <- train(Ym ~ ., data = train, method = "gamLoess", tuneGrid=grid, trControl = ctrl)
+
+print(model)
+```
+```{r}
+loess <- loess(Ym ~ ., data=train, span=0.1214286)
+```
+
+
+```{r}
+yPred = predict(loess, newdata = test[c(1:2)])
+summary((test[c(3)] - yPred)^2)
+```
+
+
+```{r}
+library(matrixStats)
+dfv = cbind(traindata[c(1:2)], rowVars(as.matrix(traindata[-c(1:2)])))
+colnames(dfv) = c('x1', 'x2', 'Y')
+dfv
+```
+
+
+```{r}
+#use 70% of dataset as training set and 30% as test set
+sample <- sample(c(TRUE, FALSE), nrow(dfv), replace=TRUE, prob=c(0.8,0.2))
+train  <- dfv[sample, ]
+test   <- dfv[!sample, ]
+
+ctrl <- trainControl(method = "cv", number = 5)
+grid <- expand.grid(span = seq(0.05, 0.15, len = 50), degree = c(1,2))
+
+model <- train(Y ~ ., data = train, method = "gamLoess", tuneGrid=grid, trControl = ctrl)
+
+print(model)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
